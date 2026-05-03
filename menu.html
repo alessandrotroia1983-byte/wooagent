@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#2d5a27">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="La Piazza">
+<link rel="manifest" href="manifest.json">
+<title>La Piazza – Colle di Tora</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+:root {
+  --green:#2d5a27; --green-l:#4a7c42; --green-bg:#e8f0e5;
+  --gold:#c9a84c; --gold-l:#f0e4b8;
+  --bg:#faf7f2; --card:#ffffff; --text:#1c1c1c; --muted:#777;
+  --border:#e5ddd0; --err:#c0392b; --ok:#27ae60;
+  --r:14px; --shadow:0 2px 16px rgba(0,0,0,.08);
+  --H:'Playfair Display',serif; --B:'Inter',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B);overflow-x:hidden}
+
+/* LOADING */
+#loading{position:fixed;inset:0;z-index:9999;background:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.load-logo{font-family:var(--H);font-size:36px;color:#fff;letter-spacing:-1px}
+.load-logo em{color:var(--gold);font-style:normal}
+.load-sub{font-size:13px;color:rgba(255,255,255,.6);letter-spacing:3px;text-transform:uppercase}
+.spin{width:32px;height:32px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-top:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
+.header-main{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px}
+.logo{font-family:var(--H);font-size:22px;font-weight:700;line-height:1.1}
+.logo em{color:var(--green);font-style:normal}
+.logo-loc{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:var(--B);font-weight:400}
+.cart-btn{display:flex;align-items:center;gap:6px;background:var(--green);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-family:var(--B);font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;position:relative}
+.cart-btn:hover{background:var(--green-l)}
+.cart-btn.pulse{animation:cartpulse .4s ease}
+@keyframes cartpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+#cart-badge{background:var(--gold);color:#000;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* CATEGORY NAV */
+.cat-scroll{overflow-x:auto;padding:0 12px 10px;display:flex;gap:8px;scrollbar-width:none}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cat-btn{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--B);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.cat-btn.active{background:var(--green);border-color:var(--green);color:#fff}
+
+/* BROADCAST BANNER */
+.broadcast{background:var(--gold-l);border-left:4px solid var(--gold);padding:10px 16px;font-size:13px;color:#5a4000;display:none}
+
+/* MENU GRID */
+.menu-section{padding:16px}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.menu-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column}
+.menu-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.menu-card.flash{animation:flash .5s ease}
+@keyframes flash{0%,100%{background:var(--card)}50%{background:var(--green-bg)}}
+.menu-card-img{width:100%;height:160px;object-fit:cover}
+.menu-card-icon{height:80px;display:flex;align-items:center;justify-content:center;background:var(--bg);font-size:36px}
+.menu-card-body{padding:14px;flex:1;display:flex;flex-direction:column;gap:6px}
+.menu-card-name{font-family:var(--H);font-size:17px;font-weight:600;line-height:1.3}
+.menu-card-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.menu-card-allergens{font-size:11px;color:#a0522d;background:#fff8f0;border-radius:4px;padding:3px 8px}
+.menu-card-footer{margin-top:auto;padding-top:10px;display:flex;align-items:center;justify-content:space-between}
+.price{font-family:var(--H);font-size:20px;font-weight:700;color:var(--green)}
+.btn-add{background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:var(--B);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-add:hover{background:var(--green-l);transform:translateY(-1px)}
+.btn-add:active{transform:scale(.96)}
+.empty-cat{text-align:center;padding:50px 20px;color:var(--muted);font-style:italic}
+
+/* BOTTOM BAR */
+.bottom-bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--border);padding:12px 16px max(12px,env(safe-area-inset-bottom));display:flex;gap:10px;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.btn-booking{flex:1;background:var(--gold);color:#000;border:none;border-radius:10px;padding:13px;font-family:var(--B);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:none}
+.btn-booking:hover{background:#d4b456}
+.btn-register-link{background:transparent;border:1.5px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--muted);font-family:var(--B);font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.btn-register-link:hover{border-color:var(--green);color:var(--green)}
+
+/* MODALS */
+.modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s;display:flex;align-items:flex-end}
+.modal.open{background:rgba(0,0,0,.5);pointer-events:auto}
+.modal-sheet{background:var(--card);border-radius:24px 24px 0 0;width:100%;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.modal.open .modal-sheet{transform:translateY(0)}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0}
+.modal-head{padding:16px 20px 8px;display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{font-family:var(--H);font-size:20px;font-weight:600}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:4px}
+.modal-body{padding:0 20px 20px}
+.modal-desc{font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.modal-note{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6}
+
+/* FORMS */
+.ff{margin-bottom:14px}
+.ff label{display:block;font-size:11px;color:var(--green);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.ff input,.ff textarea,.ff select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-family:var(--B);font-size:14px;outline:none;transition:border-color .2s}
+.ff input:focus,.ff textarea:focus{border-color:var(--green);background:var(--card)}
+.ff textarea{min-height:70px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-primary{width:100%;background:var(--green);color:#fff;border:none;border-radius:11px;padding:14px;font-family:var(--B);font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:6px}
+.btn-primary:hover{background:var(--green-l)}
+.btn-primary:active{transform:scale(.98)}
+
+/* GUEST SELECTOR */
+.guests-sel{display:flex;gap:8px;flex-wrap:wrap}
+.guests-sel button{padding:9px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:var(--B);font-size:14px;cursor:pointer;transition:all .15s}
+.guests-sel button.active{background:var(--green);border-color:var(--green);color:#fff}
+
+/* CART */
+.cart-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;line-height:1.8}
+.cart-items{padding:0 20px}
+.cart-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:12px}
+.cart-item:last-child{border-bottom:none}
+.cart-item-name{font-weight:500;font-size:14px}
+.cart-item-price{font-size:13px;color:var(--muted);margin-top:2px}
+.cart-qty{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.cart-qty button{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--card);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cart-qty button:hover{border-color:var(--green);color:var(--green)}
+.cart-qty span{font-weight:600;min-width:20px;text-align:center}
+.cart-footer{padding:0 20px 4px;border-top:1px solid var(--border);margin-top:8px}
+.cart-total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0 4px;font-size:15px}
+.cart-total-row strong{font-family:var(--H);font-size:22px;color:var(--green)}
+
+/* SUCCESS MODAL */
+.success-modal{align-items:center;justify-content:center}
+.success-box{background:var(--card);border-radius:20px;padding:32px 24px;text-align:center;max-width:320px;width:calc(100% - 32px);transform:scale(.8);transition:transform .3s cubic-bezier(.34,1.56,.64,1);opacity:0}
+.modal.open .success-box{transform:scale(1);opacity:1}
+.success-icon{width:64px;height:64px;background:var(--green-bg);color:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px}
+.success-title{font-family:var(--H);font-size:20px;font-weight:600;margin-bottom:8px}
+.success-msg{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:20px}
+
+/* TABLE BADGE */
+.table-badge{font-size:12px;color:var(--green);background:var(--green-bg);padding:4px 10px;border-radius:20px;font-weight:600}
+
+@media(max-width:480px){
+  .menu-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-logo">La <em>Piazza</em></div>
+  <div class="load-sub">Colle di Tora</div>
+  <div class="spin"></div>
+</div>
+
+<header>
+  <div class="header-main">
+    <div>
+      <div class="logo">La <em>Piazza</em></div>
+      <div class="logo-loc">Colle di Tora · Rieti</div>
+    </div>
+    <button class="cart-btn" id="cart-btn" onclick="toggleCart()" style="display:none">
+      🛒 Ordine <span id="cart-badge">0</span>
+    </button>
+  </div>
+  <div class="cat-scroll" id="cat-nav"></div>
+</header>
+
+<div class="broadcast" id="broadcast"></div>
+
+<main>
+  <section class="menu-section">
+    <div class="menu-grid" id="menu-grid">
+      <div class="empty-cat">Caricamento menu...</div>
+    </div>
+  </section>
+</main>
+
+<div class="bottom-bar">
+  <button class="btn-booking" id="btn-booking" onclick="openModal('booking')">📅 Prenota un tavolo</button>
+  <button class="btn-register-link" onclick="openModal('register')">🔔 Iscriviti alle novità</button>
+</div>
+
+<!-- CART MODAL -->
+<div class="modal" id="modal-cart" onclick="if(event.target===this)closeModal('cart')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h2>Il tuo ordine</h2>
+      <div class="table-badge" id="table-badge">Tavolo –</div>
+    </div>
+    <div id="cart-items-wrap">
+      <div class="cart-empty">Il carrello è vuoto.<br>Aggiungi qualcosa dal menu!</div>
+    </div>
+    <div id="cart-footer" class="cart-footer" style="display:none">
+      <div class="cart-total-row">Totale: <strong id="cart-total">€0,00</strong></div>
+      <div class="ff"><label>Il tuo nome (opzionale)</label><input type="text" id="order-name" placeholder="Es: Mario"></div>
+      <div class="ff"><label>Note per la cucina</label><textarea id="order-notes" placeholder="Allergie, preferenze..."></textarea></div>
+      <button class="btn-primary" onclick="submitOrder()">🍽️ Invia ordine</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="modal" id="modal-booking" onclick="if(event.target===this)closeModal('booking')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h2>📅 Prenota un tavolo</h2>
+      <button class="modal-close" onclick="closeModal('booking')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="ff"><label>Nome e Cognome *</label><input type="text" id="b-name" placeholder="Mario Rossi"></div>
+      <div class="ff"><label>Telefono *</label><input type="tel" id="b-phone" placeholder="333 000 0000"></div>
+      <div class="ff"><label>Email (opzionale)</label><input type="email" id="b-email" placeholder="mario@esempio.it"></div>
+      <div class="form-row">
+        <div class="ff"><label>Data *</label><input type="date" id="b-date"></div>
+        <div class="ff"><label>Ora *</label><input type="time" id="b-time" value="20:00" step="1800"></div>
+      </div>
+      <div class="ff">
+        <label>Numero ospiti *</label>
+        <div class="guests-sel" id="guests-sel">
+          <button onclick="setGuests(1,this)">1</button>
+          <button onclick="setGuests(2,this)" class="active">2</button>
+          <button onclick="setGuests(3,this)">3</button>
+          <button onclick="setGuests(4,this)">4</button>
+          <button onclick="setGuests(5,this)">5</button>
+          <button onclick="setGuests(6,this)">6+</button>
+        </div>
+      </div>
+      <div class="ff"><label>Note</label><textarea id="b-notes" placeholder="Evento speciale, esigenze particolari..."></textarea></div>
+      <button class="btn-primary" onclick="submitBooking()">Invia richiesta di prenotazione</button>
+      <p class="modal-note">Il ristorante la contatterà per confermare la prenotazione.</p>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="modal" id="modal-register" onclick="if(event.target===this)closeModal('register')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h2>🔔 Resta aggiornato</h2>
+      <button class="modal-close" onclick="closeModal('register')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">Iscriviti per ricevere offerte speciali, eventi e novità del ristorante direttamente su WhatsApp o email.</p>
+      <div class="ff"><label>Nome *</label><input type="text" id="r-name" placeholder="Mario"></div>
+      <div class="ff"><label>Email o Numero WhatsApp *</label><input type="text" id="r-contact" placeholder="email@esempio.it oppure 333 000 0000"></div>
+      <button class="btn-primary" onclick="submitRegistration()">Iscriviti gratis</button>
+      <p class="modal-note">Nessuno spam. Puoi disiscriverti in qualsiasi momento.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal success-modal" id="modal-success" onclick="closeModal('success')">
+  <div class="success-box">
+    <div class="success-icon">✓</div>
+    <div class="success-title" id="success-title">Perfetto!</div>
+    <div class="success-msg" id="success-msg"></div>
+    <button class="btn-primary" onclick="closeModal('success')">Chiudi</button>
+  </div>
+</div>
+
+<script>
+/* ── FIREBASE INIT ── */
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.firestore();
+
+/* ── STATE ── */
+let cart = [];
+let menuItems = [];
+let settings = { bookingEnabled: false, orderingEnabled: true };
+let bookingGuests = 2;
+const tableParam = new URLSearchParams(location.search).get('table');
+const tableInfo = tableParam ? 'Tavolo ' + tableParam : 'Bar';
+
+/* ── INIT ── */
+async function init() {
+  document.getElementById('table-badge').textContent = tableInfo;
+  document.getElementById('b-date').min = new Date().toISOString().split('T')[0];
+
+  try {
+    await Promise.all([loadSettings(), loadMenu()]);
+    loadBroadcast();
+  } catch(e) {
+    console.warn('Firebase non configurato, carico menu demo:', e.message);
+    loadDemoMenu();
+    applySettings();
+  }
+  document.getElementById('loading').style.display = 'none';
+}
+
+async function loadSettings() {
+  const snap = await db.collection('config').doc('settings').get();
+  if (snap.exists) Object.assign(settings, snap.data());
+  applySettings();
+}
+
+function applySettings() {
+  document.getElementById('btn-booking').style.display = settings.bookingEnabled ? 'flex' : 'none';
+  document.getElementById('cart-btn').style.display = settings.orderingEnabled ? 'flex' : 'none';
+}
+
+async function loadMenu() {
+  const [catSnap, itemSnap] = await Promise.all([
+    db.collection('menu_categories').orderBy('order').get(),
+    db.collection('menu_items').where('available', '==', true).get()
+  ]);
+  const cats = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  menuItems = itemSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (!cats.length) { loadDemoMenu(); return; }
+  renderCategories(cats);
+  selectCat(cats[0].id);
+}
+
+/* ── CATEGORIES ── */
+function renderCategories(cats) {
+  document.getElementById('cat-nav').innerHTML = cats.map(c =>
+    `<button class="cat-btn" id="cb-${c.id}" onclick="selectCat('${c.id}')">${c.icon||''}${c.name}</button>`
+  ).join('');
+}
+
+function selectCat(id) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('cb-' + id)?.classList.add('active');
+  renderMenuItems(id);
+}
+
+function renderMenuItems(catId) {
+  const items = menuItems.filter(i => i.categoryId === catId);
+  const grid = document.getElementById('menu-grid');
+  if (!items.length) { grid.innerHTML = '<div class="empty-cat">Nessun articolo in questa categoria.</div>'; return; }
+  grid.innerHTML = items.map(item => {
+    const img = item.imageUrl
+      ? `<img src="${item.imageUrl}" class="menu-card-img" alt="${item.name}" loading="lazy">`
+      : `<div class="menu-card-icon">${item.icon || '🍽️'}</div>`;
+    const addBtn = settings.orderingEnabled
+      ? `<button class="btn-add" onclick='addToCart(${JSON.stringify(item)})'>+ Aggiungi</button>` : '';
+    return `<div class="menu-card" id="mc-${item.id}">
+      ${img}
+      <div class="menu-card-body">
+        <div class="menu-card-name">${item.name}</div>
+        ${item.description ? `<div class="menu-card-desc">${item.description}</div>` : ''}
+        ${item.allergens ? `<div class="menu-card-allergens">⚠️ ${item.allergens}</div>` : ''}
+        <div class="menu-card-footer">
+          <span class="price">€${parseFloat(item.price).toFixed(2)}</span>
+          ${addBtn}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── CART ── */
+function addToCart(item) {
+  const ex = cart.find(i => i.id === item.id);
+  if (ex) ex.qty++; else cart.push({ ...item, qty: 1 });
+  updateCartBadge();
+  const card = document.getElementById('mc-' + item.id);
+  if (card) { card.classList.add('flash'); setTimeout(() => card.classList.remove('flash'), 500); }
+  document.getElementById('cart-btn').classList.add('pulse');
+  setTimeout(() => document.getElementById('cart-btn').classList.remove('pulse'), 400);
+}
+
+function changeQty(id, d) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty = Math.max(0, item.qty + d);
+  if (item.qty === 0) cart = cart.filter(i => i.id !== id);
+  updateCartBadge();
+  renderCartItems();
+}
+
+function updateCartBadge() {
+  const n = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cart-badge').textContent = n;
+}
+
+function renderCartItems() {
+  const wrap = document.getElementById('cart-items-wrap');
+  const footer = document.getElementById('cart-footer');
+  if (!cart.length) {
+    wrap.innerHTML = '<div class="cart-empty">Il carrello è vuoto.<br>Aggiungi qualcosa dal menu!</div>';
+    footer.style.display = 'none'; return;
+  }
+  footer.style.display = 'block';
+  wrap.innerHTML = '<div class="cart-items">' + cart.map(item => `
+    <div class="cart-item">
+      <div><div class="cart-item-name">${item.name}</div><div class="cart-item-price">€${(item.price*item.qty).toFixed(2)}</div></div>
+      <div class="cart-qty">
+        <button onclick="changeQty('${item.id}',-1)">−</button>
+        <span>${item.qty}</span>
+        <button onclick="changeQty('${item.id}',1)">+</button>
+      </div>
+    </div>`).join('') + '</div>';
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  document.getElementById('cart-total').textContent = '€' + total.toFixed(2).replace('.', ',');
+}
+
+function toggleCart() {
+  const m = document.getElementById('modal-cart');
+  if (m.classList.contains('open')) closeModal('cart');
+  else { renderCartItems(); openModal('cart'); }
+}
+
+async function submitOrder() {
+  if (!cart.length) return;
+  const name = document.getElementById('order-name').value.trim();
+  const notes = document.getElementById('order-notes').value.trim();
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  try {
+    await db.collection('orders').add({
+      tableInfo, customerName: name || 'Anonimo',
+      items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
+      total, notes, status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    cart = []; updateCartBadge(); closeModal('cart');
+    showSuccess('Ordine inviato!', 'La cucina ha ricevuto il tuo ordine. Grazie! 🍽️');
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+/* ── BOOKING ── */
+function setGuests(n, btn) {
+  bookingGuests = n;
+  document.querySelectorAll('#guests-sel button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function submitBooking() {
+  const name = document.getElementById('b-name').value.trim();
+  const phone = document.getElementById('b-phone').value.trim();
+  const date = document.getElementById('b-date').value;
+  const time = document.getElementById('b-time').value;
+  if (!name || !phone || !date || !time) { alert('Compila i campi obbligatori (*)'); return; }
+  try {
+    await db.collection('bookings').add({
+      name, phone,
+      email: document.getElementById('b-email').value.trim(),
+      date, time, guests: bookingGuests,
+      notes: document.getElementById('b-notes').value.trim(),
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeModal('booking');
+    showSuccess('Prenotazione ricevuta!', 'Ti contatteremo presto al numero indicato per confermare. 📅');
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+/* ── REGISTRATION ── */
+async function submitRegistration() {
+  const name = document.getElementById('r-name').value.trim();
+  const contact = document.getElementById('r-contact').value.trim();
+  if (!name || !contact) { alert('Inserisci nome e contatto'); return; }
+  try {
+    await db.collection('customers').add({
+      name, contact,
+      registeredAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeModal('register');
+    showSuccess('Iscritto!', 'Benvenuto! Riceverai le nostre promozioni ed eventi. 🎉');
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+/* ── BROADCAST ── */
+async function loadBroadcast() {
+  try {
+    const snap = await db.collection('broadcasts')
+      .where('active', '==', true).orderBy('createdAt', 'desc').limit(1).get();
+    if (!snap.empty) {
+      const b = document.getElementById('broadcast');
+      b.textContent = '📢 ' + snap.docs[0].data().message;
+      b.style.display = 'block';
+    }
+  } catch(e) {}
+}
+
+/* ── MODALS ── */
+function openModal(id) {
+  document.getElementById('modal-' + id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById('modal-' + id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function showSuccess(title, msg) {
+  document.getElementById('success-title').textContent = title;
+  document.getElementById('success-msg').textContent = msg;
+  openModal('success');
+}
+
+/* ── DEMO MENU ── */
+function loadDemoMenu() {
+  const cats = [
+    {id:'antipasti',name:'Antipasti',icon:'🥗 '},
+    {id:'primi',name:'Primi',icon:'🍝 '},
+    {id:'secondi',name:'Secondi',icon:'🥩 '},
+    {id:'dolci',name:'Dolci',icon:'🍮 '},
+    {id:'bevande',name:'Bevande',icon:'🍷 '}
+  ];
+  menuItems = [
+    {id:'a1',categoryId:'antipasti',name:'Bruschette al pomodoro',description:'Pane casereccio, pomodoro fresco, aglio e basilico',price:6,icon:'🍅'},
+    {id:'a2',categoryId:'antipasti',name:'Tagliere misto',description:'Salumi e formaggi locali con miele e confetture artigianali',price:14,icon:'🧀'},
+    {id:'p1',categoryId:'primi',name:'Pasta alla gricia',description:'Rigatoni con guanciale croccante e pecorino romano DOP',price:12,icon:'🍝'},
+    {id:'p2',categoryId:'primi',name:'Cacio e pepe',description:'Tonnarelli, pecorino romano e pepe nero in grani',price:12,icon:'🍝'},
+    {id:'p3',categoryId:'primi',name:'Pappardelle al tartufo',description:'Tartufo dei Monti Sabini, burro e parmigiano',price:16,icon:'🍝'},
+    {id:'s1',categoryId:'secondi',name:'Abbacchio alla scottadito',description:'Costolette di agnello locale alla griglia con rosmarino',price:18,icon:'🥩'},
+    {id:'s2',categoryId:'secondi',name:'Filetto di trota del lago',description:'Trota del Lago di Turano con verdure di stagione',price:16,icon:'🐟'},
+    {id:'d1',categoryId:'dolci',name:'Tiramisù della casa',description:'Ricetta tradizionale con savoiardi al caffè e mascarpone',price:6,icon:'🍮'},
+    {id:'d2',categoryId:'dolci',name:'Crostata artigianale',description:'Pasta frolla con marmellata di fichi del territorio',price:5,icon:'🥧'},
+    {id:'b1',categoryId:'bevande',name:'Vino rosso della casa',description:'Vino locale, ¼ litro',price:4,icon:'🍷'},
+    {id:'b2',categoryId:'bevande',name:'Acqua naturale/frizzante',description:'Bottiglia 0,75 L',price:2,icon:'💧'},
+    {id:'b3',categoryId:'bevande',name:'Birra artigianale',description:'Alla spina 33cl, produzione locale',price:4.5,icon:'🍺'},
+  ];
+  renderCategories(cats);
+  selectCat('antipasti');
+}
+
+/* ── START ── */
+window.addEventListener('load', () => {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  init();
+});
+</script>
+</body>
+</html>
