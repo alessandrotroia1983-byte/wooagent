@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Admin – Trattoria Bar la Piazza</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0e16;--s1:#16161f;--s2:#1d1d28;--s3:#242435;
+  --brd:#2a2a3e;--green:#3a7a33;--gl:#4e9e45;--gbg:rgba(58,122,51,.15);
+  --gold:#c9a84c;--txt:#e6e6f0;--muted:#60608a;
+  --ok:#3a7a33;--err:#c0392b;--warn:#d4902a;--info:#2980b9;
+  --r:10px;--H:'Playfair Display',serif;--B:'Inter',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--B);overflow-x:hidden}
+
+/* LOGIN */
+#login-wrap{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.lbox{width:100%;max-width:380px;background:var(--s1);border:1px solid var(--brd);border-radius:20px;padding:36px 28px}
+.l-logo{font-family:var(--H);font-size:26px;font-weight:700;margin-bottom:3px}
+.l-logo em{color:var(--gold);font-style:normal}
+.l-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:28px}
+.l-hint{margin-bottom:20px;padding:10px 14px;background:var(--gbg);border:1px solid rgba(58,122,51,.3);border-radius:8px;font-size:12px;color:#6fc466;line-height:1.6}
+.lf{margin-bottom:14px}
+.lf label{display:block;font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.lf input{width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:11px 13px;color:var(--txt);font-family:var(--B);font-size:14px;outline:none;transition:border-color .2s}
+.lf input:focus{border-color:var(--green)}
+.btn-login{width:100%;background:var(--green);color:#fff;border:none;border-radius:10px;padding:13px;font-family:var(--B);font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .2s}
+.btn-login:hover{background:var(--gl)}
+.l-err{color:var(--err);font-size:13px;margin-top:10px;display:none}
+
+/* APP */
+#app{display:none;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--s1);border-right:1px solid var(--brd);display:flex;flex-direction:column;z-index:200;transition:transform .3s}
+.sb-head{padding:20px 16px 14px;border-bottom:1px solid var(--brd)}
+.sb-logo{font-family:var(--H);font-size:18px;font-weight:700}
+.sb-logo em{color:var(--gold);font-style:normal}
+.sb-role{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+nav{flex:1;padding:8px;overflow-y:auto}
+.ng{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:10px 8px 3px}
+.ni{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;margin-bottom:1px;user-select:none}
+.ni:hover{background:var(--s2);color:var(--txt)}
+.ni.active{background:var(--gbg);color:#5fc455}
+.ni .ico{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.ni .nbadge{margin-left:auto;background:var(--err);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;display:none}
+.sb-foot{padding:12px;border-top:1px solid var(--brd)}
+.btn-out{width:100%;background:transparent;border:1px solid var(--brd);border-radius:7px;padding:8px;color:var(--muted);font-family:var(--B);font-size:12px;cursor:pointer;transition:all .2s}
+.btn-out:hover{border-color:var(--err);color:var(--err)}
+.main{margin-left:220px;padding:24px;min-height:100vh}
+.ham{display:none;position:fixed;top:14px;left:14px;z-index:201;background:var(--s1);border:1px solid var(--brd);border-radius:8px;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+.ph{font-family:var(--H);font-size:22px;font-weight:700;margin-bottom:20px}
+.ph em{color:var(--gold);font-style:normal}
+
+/* PANELS */
+.panel{display:none}.panel.active{display:block}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);padding:16px}
+.stat-v{font-family:var(--H);font-size:30px;font-weight:700;color:var(--gold)}
+.stat-l{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+
+/* ORDERS */
+.olist{display:flex;flex-direction:column;gap:12px}
+.ocard{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden}
+.ocard.new-order{border-color:var(--warn);animation:glow .6s ease}
+@keyframes glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 16px rgba(212,144,42,.4)}}
+.ohdr{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--brd)}
+.otable{font-family:var(--H);font-size:16px;font-weight:600}
+.ometa{font-size:11px;color:var(--muted)}
+.oitems{padding:10px 16px;display:flex;flex-direction:column;gap:4px}
+.orow{font-size:13px;display:flex;justify-content:space-between}
+.orow span{color:var(--muted)}
+.ofooter{padding:10px 16px;border-top:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.ototal{font-weight:700;color:var(--gold);font-size:16px}
+.onotes{padding:0 16px 10px;font-size:11px;color:var(--muted);font-style:italic}
+.ssel{background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:7px 10px;color:var(--txt);font-family:var(--B);font-size:12px;outline:none;cursor:pointer}
+
+/* BADGES */
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.b-pending  {background:rgba(212,144,42,.15);color:var(--warn);border:1px solid rgba(212,144,42,.3)}
+.b-preparing{background:rgba(41,128,185,.15);color:var(--info);border:1px solid rgba(41,128,185,.3)}
+.b-ready    {background:rgba(58,122,51,.15);color:#5fc455;border:1px solid rgba(58,122,51,.3)}
+.b-delivered{background:var(--s2);color:var(--muted);border:1px solid var(--brd)}
+
+/* MENU TABLE */
+.mtable{width:100%;border-collapse:collapse}
+.mtable th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 12px;text-align:left;background:var(--s2);border-bottom:1px solid var(--brd)}
+.mtable td{padding:10px 12px;border-bottom:1px solid var(--brd);font-size:13px;vertical-align:middle}
+.mtable tr:last-child td{border-bottom:none}
+.mtable tbody tr:hover td{background:rgba(255,255,255,.02)}
+.atog{width:36px;height:20px;background:var(--brd);border-radius:10px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;display:block}
+.atog::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s}
+.atog.on{background:var(--green)}
+.atog.on::after{left:19px}
+.cat-hdr{font-family:var(--H);font-size:16px;font-weight:600;color:var(--gold);padding:8px 0 6px;border-bottom:1px solid var(--brd);margin:20px 0 8px;display:flex;align-items:center;justify-content:space-between}
+.cat-section:first-child .cat-hdr{margin-top:0}
+
+/* FORM */
+.iform{background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);padding:16px;margin-bottom:16px;display:none}
+.iform.open{display:block}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ff{margin-bottom:12px}
+.ff label{display:block;font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.ff input,.ff textarea,.ff select{width:100%;background:var(--s1);border:1px solid var(--brd);border-radius:7px;padding:9px 12px;color:var(--txt);font-family:var(--B);font-size:13px;outline:none;transition:border-color .2s}
+.ff input:focus,.ff textarea:focus,.ff select:focus{border-color:var(--green)}
+.ff textarea{min-height:60px;resize:vertical}
+.btn-a{background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-family:var(--B);font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-a:hover{background:var(--gl)}
+.btn-g{background:transparent;border:1px solid var(--brd);border-radius:8px;padding:9px 16px;color:var(--muted);font-family:var(--B);font-size:13px;cursor:pointer;transition:all .2s}
+.btn-g:hover{border-color:var(--txt);color:var(--txt)}
+.btn-sm{padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;border:1px solid var(--brd);background:var(--s2);color:var(--txt);font-family:var(--B)}
+.btn-sm:hover{border-color:var(--txt)}
+.btn-sm.del{border-color:rgba(192,57,43,.35);color:var(--err)}
+.btn-sm.del:hover{background:rgba(192,57,43,.1)}
+
+/* BOOKINGS */
+.bcard{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.bname{font-family:var(--H);font-size:16px;font-weight:600;margin-bottom:5px}
+.bmeta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px}
+.bmeta strong{color:var(--txt)}
+.bactions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-confirm{background:var(--gbg);border:1px solid rgba(58,122,51,.4);border-radius:7px;padding:6px 14px;color:#5fc455;font-family:var(--B);font-size:12px;font-weight:600;cursor:pointer}
+.btn-confirm:hover{background:rgba(58,122,51,.3)}
+.btn-cancel{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);border-radius:7px;padding:6px 14px;color:var(--err);font-family:var(--B);font-size:12px;cursor:pointer}
+
+/* SETTINGS */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--brd)}
+.srow:last-child{border-bottom:none}
+.slbl{font-weight:500;font-size:14px}
+.sdesc{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{width:48px;height:26px;background:var(--brd);border-radius:13px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle.on{background:var(--green)}
+.toggle.on::after{left:25px}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:16px}
+.card-h{padding:14px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px}
+.card-b{padding:16px}
+
+/* NOTIFY */
+.notif{position:fixed;top:16px;right:16px;z-index:9999;background:var(--s1);border:1px solid var(--green);border-radius:10px;padding:12px 16px;font-size:13px;max-width:280px;transform:translateX(130%);transition:transform .3s cubic-bezier(.175,.885,.32,1.275);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.notif.show{transform:translateX(0)}
+.notif.err{border-color:var(--err)}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:16px;padding-top:60px}
+  .ham{display:flex}.fgrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif"></div>
+
+<!-- LOGIN -->
+<div id="login-wrap">
+  <div class="lbox">
+    <div class="l-logo">Trattoria Bar <em>la Piazza</em></div>
+    <div class="l-sub">Pannello Ristoratore</div>
+    <div class="l-hint">
+      <strong>Demo — accesso di prova</strong><br>
+      Email: qualsiasi &nbsp;|&nbsp; Password: <strong>lapiazza</strong>
+    </div>
+    <div class="lf"><label>Email</label><input type="email" id="l-email" placeholder="admin@lapiazza.it" value="admin@lapiazza.it" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="lf"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" onclick="doLogin()">Accedi al pannello</button>
+    <div class="l-err" id="l-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <button class="ham" id="ham" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-logo">Trattoria Bar <em>la Piazza</em></div>
+      <div class="sb-role">Gestionale</div>
+    </div>
+    <nav>
+      <div class="ng">Live</div>
+      <div class="ni active" onclick="go('orders')"><span class="ico">📋</span> Ordini <span class="nbadge" id="nb-orders">0</span></div>
+      <div class="ni" onclick="go('bookings')"><span class="ico">📅</span> Prenotazioni <span class="nbadge" id="nb-bookings">0</span></div>
+      <div class="ng">Contenuti</div>
+      <div class="ni" onclick="go('menu')"><span class="ico">🍽️</span> Menu</div>
+      <div class="ng">Clienti</div>
+      <div class="ni" onclick="go('customers')"><span class="ico">👥</span> Clienti <span class="nbadge" id="nb-customers">0</span></div>
+      <div class="ni" onclick="go('broadcast')"><span class="ico">📢</span> Comunicazioni</div>
+      <div class="ng">Sistema</div>
+      <div class="ni" onclick="go('settings')"><span class="ico">⚙️</span> Impostazioni</div>
+    </nav>
+    <div class="sb-foot">
+      <button class="btn-out" onclick="doLogout()">Esci</button>
+    </div>
+  </div>
+
+  <main class="main">
+
+    <!-- ORDERS -->
+    <div class="panel active" id="panel-orders">
+      <div class="ph">Ordini <em>live</em></div>
+      <div class="stats">
+        <div class="stat"><div class="stat-v" id="s-pending">0</div><div class="stat-l">In attesa</div></div>
+        <div class="stat"><div class="stat-v" id="s-preparing">0</div><div class="stat-l">In preparazione</div></div>
+        <div class="stat"><div class="stat-v" id="s-ready">0</div><div class="stat-l">Pronti</div></div>
+        <div class="stat"><div class="stat-v" id="s-today">0</div><div class="stat-l">Ordini oggi</div></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px">
+        <button class="btn-g" style="font-size:12px" onclick="clearDelivered()">Pulisci consegnati</button>
+        <button class="btn-a" style="font-size:12px;padding:7px 14px" onclick="renderOrders()">↺ Aggiorna</button>
+      </div>
+      <div class="olist" id="olist"><div style="text-align:center;padding:50px;color:var(--muted)">Nessun ordine attivo ✓</div></div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="panel" id="panel-bookings">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <div class="ph" style="margin:0">Prenotazioni</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-g" id="bf-all" onclick="filterBookings('all')" style="font-size:12px;border-color:var(--green);color:#5fc455">Tutte</button>
+          <button class="btn-g" id="bf-pending" onclick="filterBookings('pending')" style="font-size:12px">In attesa</button>
+          <button class="btn-g" id="bf-confirmed" onclick="filterBookings('confirmed')" style="font-size:12px">Confermate</button>
+        </div>
+      </div>
+      <div id="blist"></div>
+    </div>
+
+    <!-- MENU -->
+    <div class="panel" id="panel-menu">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="ph" style="margin:0">Gestione <em>Menu</em></div>
+        <button class="btn-a" onclick="openItemForm()">+ Nuovo piatto</button>
+      </div>
+
+      <!-- ITEM FORM -->
+      <div class="iform" id="iform">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px" id="iform-title">Nuovo piatto</div>
+        <div class="fgrid">
+          <div class="ff"><label>Nome piatto *</label><input type="text" id="if-name" placeholder="Es: Pasta alla gricia"></div>
+          <div class="ff"><label>Categoria *</label><select id="if-cat"></select></div>
+          <div class="ff"><label>Prezzo (€) *</label><input type="number" id="if-price" placeholder="12.00" step="0.50" min="0"></div>
+          <div class="ff"><label>Icona (emoji)</label><input type="text" id="if-icon" placeholder="🍝" maxlength="4"></div>
+        </div>
+        <div class="ff"><label>Descrizione</label><textarea id="if-desc" placeholder="Ingredienti e preparazione..."></textarea></div>
+        <div class="ff"><label>Allergeni (opzionale)</label><input type="text" id="if-allergens" placeholder="Es: Glutine, Lattosio"></div>
+        <!-- IMMAGINE: upload o URL -->
+        <div class="ff">
+          <label>Immagine piatto (opzionale)</label>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <label for="if-upload" style="all:unset;background:var(--green);color:#fff;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap" onmouseover="this.style.background='#4e9e45'" onmouseout="this.style.background='#3a7a33'">📷 Carica immagine</label>
+              <input type="file" id="if-upload" accept="image/*" style="display:none" onchange="handleImgUpload(this)">
+              <span style="font-size:12px;color:var(--muted)">oppure</span>
+              <input type="url" id="if-img" placeholder="Incolla URL immagine" style="flex:1;min-width:180px;background:var(--s1);border:1px solid var(--brd);border-radius:7px;padding:8px 12px;color:var(--txt);font-family:var(--B);font-size:13px;outline:none" oninput="previewImgUrl(this.value)">
+            </div>
+            <div id="img-preview-wrap" style="display:none;position:relative;width:fit-content">
+              <img id="img-preview" src="" alt="Anteprima" style="max-height:140px;max-width:100%;border-radius:8px;border:1px solid var(--brd);object-fit:cover;display:block">
+              <button onclick="clearImg()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="if-id">
+        <div style="display:flex;gap:8px">
+          <button class="btn-a" onclick="saveItem()">Salva piatto</button>
+          <button class="btn-g" onclick="closeItemForm()">Annulla</button>
+        </div>
+      </div>
+
+      <!-- CAT FORM -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-h" onclick="toggleEl('cform')" style="cursor:pointer">
+          + Aggiungi categoria <span style="color:var(--muted);font-size:11px">▾</span>
+        </div>
+        <div id="cform" style="display:none;padding:14px">
+          <div class="fgrid">
+            <div class="ff"><label>Nome categoria</label><input type="text" id="nc-name" placeholder="Es: Antipasti"></div>
+            <div class="ff"><label>Icona (emoji)</label><input type="text" id="nc-icon" placeholder="🥗" maxlength="4"></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-a" onclick="saveCat()">Aggiungi</button>
+            <button class="btn-g" onclick="toggleEl('cform')">Annulla</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="menu-list"></div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="panel" id="panel-customers">
+      <div class="ph">Clienti <em>registrati</em></div>
+      <div class="card">
+        <div class="card-h"><span id="cust-count">0 clienti</span><button class="btn-g" style="font-size:12px" onclick="renderCustomers()">Aggiorna</button></div>
+        <div class="card-b" id="cust-list"></div>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="panel" id="panel-broadcast">
+      <div class="ph">Comunicazioni</div>
+      <div class="card">
+        <div class="card-h">📢 Banner sul menu</div>
+        <div class="card-b">
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">Questo messaggio appare come banner in cima al menu per tutti i clienti in tempo reale.</p>
+          <div class="ff"><label>Messaggio</label><textarea id="bc-msg" placeholder="Es: Oggi sera menù speciale di pesce! Prenota il tuo tavolo 🐟" style="min-height:90px"></textarea></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-a" onclick="publishBroadcast()">Pubblica banner</button>
+            <button class="btn-g" onclick="removeBroadcast()">Rimuovi banner attivo</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h">Storico messaggi</div>
+        <div class="card-b" id="bc-history"><div style="color:var(--muted);font-size:13px">Nessun messaggio</div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <div class="ph">Impostazioni</div>
+      <div class="card">
+        <div class="card-h">Funzionalità app</div>
+        <div class="card-b">
+          <div class="srow">
+            <div><div class="slbl">Ordini dal tavolo</div><div class="sdesc">I clienti possono ordinare dal telefono scannerizzando il QR</div></div>
+            <button class="toggle" id="tog-orders" onclick="toggleSetting('orderingEnabled',this)"></button>
+          </div>
+          <div class="srow">
+            <div><div class="slbl">Prenotazioni tavoli</div><div class="sdesc">Mostra il pulsante "Prenota un tavolo" nel menu del cliente</div></div>
+            <button class="toggle" id="tog-booking" onclick="toggleSetting('bookingEnabled',this)"></button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h">URL QR Code tavoli</div>
+        <div class="card-b">
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
+            Usa questi URL per generare i QR code (con un servizio come qr-code-generator.com). Clicca per copiare.
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px" id="qr-wrap"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h">⚠️ Dati demo</div>
+        <div class="card-b">
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
+            Questa versione usa localStorage del browser. I dati sono condivisi tra menu.html e admin.html nella stessa finestra/tab.
+          </p>
+          <button class="btn-g" style="color:var(--err);border-color:rgba(192,57,43,.3)" onclick="clearAllData()">Cancella tutti i dati demo</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ─── STORAGE ─── */
+const S = {
+  get(k,d){try{return JSON.parse(localStorage.getItem('lp_'+k))??d}catch{return d}},
+  set(k,v){localStorage.setItem('lp_'+k,JSON.stringify(v))}
+};
+
+/* ─── AUTH ─── */
+function doLogin(){
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const err   = document.getElementById('l-err');
+  if(!email){err.textContent='Inserisci email';err.style.display='block';return;}
+  if(pass !== 'lapiazza'){err.textContent='Password errata. Usa: lapiazza';err.style.display='block';return;}
+  err.style.display='none';
+  S.set('admin_session','1');
+  showApp();
+}
+function doLogout(){
+  if(!confirm('Vuoi uscire dal pannello?'))return;
+  S.set('admin_session','0');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-wrap').style.display='flex';
+}
+function showApp(){
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('app').style.display='block';
+  initApp();
+}
+
+/* ─── STATE ─── */
+let settings={}, bookFilter='all', editingItemId=null;
+
+/* ─── INIT ─── */
+function initApp(){
+  seedDemoData();
+  loadSettings();
+  renderOrders();
+  renderBookings();
+  renderMenu();
+  renderCustomers();
+  loadBcHistory();
+  buildQrLinks();
+  // Poll ogni 3 secondi (simula real-time)
+  setInterval(()=>{ renderOrders(); updateNavBadges(); }, 3000);
+  updateNavBadges();
+}
+
+/* ─── SEED DEMO ─── */
+function seedDemoData(){
+  if(S.get('demo_seeded',false)) return;
+  S.set('orders',[
+    {id:'ord_demo1',tableInfo:'Tavolo 3',customerName:'Giulia',items:[{id:'p1',name:'Pasta alla gricia',price:12,qty:2},{id:'b1',name:'Vino rosso della casa',price:4,qty:1}],total:28,notes:'',status:'pending',createdAt:new Date(Date.now()-4*60000).toISOString()},
+    {id:'ord_demo2',tableInfo:'Tavolo 7',customerName:'Marco',items:[{id:'s1',name:'Abbacchio alla scottadito',price:18,qty:1},{id:'d1',name:'Tiramisù della casa',price:6,qty:2},{id:'b3',name:'Acqua naturale / frizzante',price:2,qty:2}],total:34,notes:'Senza cipolla nel secondo',status:'preparing',createdAt:new Date(Date.now()-12*60000).toISOString()},
+    {id:'ord_demo3',tableInfo:'Banco / Bar',customerName:'Anonimo',items:[{id:'b5',name:'Caffè espresso',price:1.2,qty:2}],total:2.4,notes:'',status:'ready',createdAt:new Date(Date.now()-20*60000).toISOString()}
+  ]);
+  S.set('bookings',[
+    {id:'book_demo1',name:'Famiglia Bianchi',phone:'333 111 0001',email:'bianchi@email.it',date:new Date(Date.now()+2*86400000).toISOString().split('T')[0],time:'20:00',guests:4,notes:'Compleanno della figlia',status:'pending',createdAt:new Date().toISOString()},
+    {id:'book_demo2',name:'Luca Verdi',phone:'335 222 0002',email:'',date:new Date(Date.now()+3*86400000).toISOString().split('T')[0],time:'13:00',guests:2,notes:'',status:'confirmed',createdAt:new Date(Date.now()-86400000).toISOString()}
+  ]);
+  S.set('customers',[
+    {id:'c1',name:'Giulia Rossi',contact:'giulia@email.it',createdAt:new Date(Date.now()-3*86400000).toISOString()},
+    {id:'c2',name:'Marco Neri',contact:'339 000 1234',createdAt:new Date(Date.now()-86400000).toISOString()}
+  ]);
+  S.set('broadcasts',[]);
+  S.set('demo_seeded',true);
+}
+
+/* ─── NAV ─── */
+const PANELS=['orders','bookings','menu','customers','broadcast','settings'];
+function go(name){
+  PANELS.forEach(p=>{
+    document.getElementById('panel-'+p).classList.toggle('active',p===name);
+  });
+  document.querySelectorAll('.ni').forEach((el,i)=>{
+    el.classList.toggle('active', PANELS[i]===name);
+  });
+  document.getElementById('sidebar').classList.remove('open');
+  if(name==='menu') renderMenu();
+  if(name==='bookings') renderBookings();
+  if(name==='customers') renderCustomers();
+  if(name==='broadcast') loadBcHistory();
+}
+
+function updateNavBadges(){
+  const orders   = S.get('orders',[]).filter(o=>o.status==='pending').length;
+  const bookings = S.get('bookings',[]).filter(b=>b.status==='pending').length;
+  const customers= S.get('customers',[]).length;
+  setBadge('nb-orders',orders);
+  setBadge('nb-bookings',bookings);
+  setBadge('nb-customers',customers);
+}
+function setBadge(id,n){
+  const el=document.getElementById(id);
+  el.textContent=n; el.style.display=n>0?'':'none';
+}
+
+/* ─── SETTINGS ─── */
+function loadSettings(){
+  settings=S.get('settings',{orderingEnabled:true,bookingEnabled:true});
+  document.getElementById('tog-orders').classList.toggle('on',settings.orderingEnabled);
+  document.getElementById('tog-booking').classList.toggle('on',settings.bookingEnabled);
+}
+function toggleSetting(key,btn){
+  settings[key]=!settings[key];
+  btn.classList.toggle('on',settings[key]);
+  S.set('settings',settings);
+  notify(key==='bookingEnabled'
+    ?(settings[key]?'Prenotazioni attivate ✓':'Prenotazioni disattivate')
+    :(settings[key]?'Ordini attivati ✓':'Ordini disattivati'));
+}
+
+/* ─── ORDERS ─── */
+function renderOrders(){
+  const all    = S.get('orders',[]);
+  const active = all.filter(o=>o.status!=='delivered');
+  const today  = all.filter(o=>new Date(o.createdAt).toDateString()===new Date().toDateString());
+  const cnt={pending:0,preparing:0,ready:0};
+  active.forEach(o=>{if(cnt[o.status]!==undefined)cnt[o.status]++;});
+  document.getElementById('s-pending').textContent  = cnt.pending;
+  document.getElementById('s-preparing').textContent= cnt.preparing;
+  document.getElementById('s-ready').textContent    = cnt.ready;
+  document.getElementById('s-today').textContent    = today.length;
+
+  const list=document.getElementById('olist');
+  if(!active.length){list.innerHTML='<div style="text-align:center;padding:50px;color:var(--muted)">Nessun ordine attivo ✓</div>';return;}
+
+  const SL={pending:'In attesa',preparing:'In preparazione',ready:'Pronto',delivered:'Consegnato'};
+  const SC={pending:'b-pending',preparing:'b-preparing',ready:'b-ready',delivered:'b-delivered'};
+  list.innerHTML=active.map(o=>{
+    const t=new Date(o.createdAt).toLocaleTimeString('it',{hour:'2-digit',minute:'2-digit'});
+    const rows=(o.items||[]).map(i=>`<div class="orow"><span>${i.qty}× ${i.name}</span><span>€${(i.price*i.qty).toFixed(2)}</span></div>`).join('');
+    return `<div class="ocard">
+      <div class="ohdr">
+        <div>
+          <div class="otable">🪑 ${o.tableInfo}</div>
+          <div class="ometa">${o.customerName||''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:11px;color:var(--muted)">${t}</span>
+          <span class="badge ${SC[o.status]||''}">${SL[o.status]||o.status}</span>
+        </div>
+      </div>
+      <div class="oitems">${rows}</div>
+      ${o.notes?`<div class="onotes">📝 ${o.notes}</div>`:''}
+      <div class="ofooter">
+        <span class="ototal">€${parseFloat(o.total||0).toFixed(2)}</span>
+        <select class="ssel" onchange="updateOrderStatus('${o.id}',this.value)">
+          <option value="pending"   ${o.status==='pending'?'selected':''}>In attesa</option>
+          <option value="preparing" ${o.status==='preparing'?'selected':''}>In preparazione</option>
+          <option value="ready"     ${o.status==='ready'?'selected':''}>Pronto ✓</option>
+          <option value="delivered" ${o.status==='delivered'?'selected':''}>Consegnato</option>
+        </select>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateOrderStatus(id,status){
+  const orders=S.get('orders',[]);
+  const o=orders.find(x=>x.id===id);
+  if(!o)return;
+  o.status=status;
+  S.set('orders',orders);
+  renderOrders();
+  notify('Ordine aggiornato: '+{pending:'In attesa',preparing:'In preparazione',ready:'Pronto',delivered:'Consegnato'}[status]);
+}
+
+function clearDelivered(){
+  const orders=S.get('orders',[]).filter(o=>o.status!=='delivered');
+  S.set('orders',orders);
+  renderOrders();
+  notify('Ordini consegnati rimossi');
+}
+
+/* ─── BOOKINGS ─── */
+function renderBookings(){
+  let list=S.get('bookings',[]);
+  if(bookFilter!=='all') list=list.filter(b=>b.status===bookFilter);
+  list.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const el=document.getElementById('blist');
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Nessuna prenotazione</div>';return;}
+  const SC={pending:'var(--warn)',confirmed:'#5fc455',cancelled:'var(--err)'};
+  const SL={pending:'In attesa',confirmed:'✓ Confermata',cancelled:'✕ Annullata'};
+  el.innerHTML=list.map(b=>`
+    <div class="bcard">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+        <div class="bname">${b.name}</div>
+        <span style="font-size:12px;font-weight:600;color:${SC[b.status]||'var(--muted)'}">${SL[b.status]||b.status}</span>
+      </div>
+      <div class="bmeta">
+        <span>📅 <strong>${b.date}</strong> ore <strong>${b.time}</strong></span>
+        <span>👥 <strong>${b.guests}</strong> ospiti</span>
+        <span>📞 <strong>${b.phone}</strong></span>
+        ${b.email?`<span>✉️ ${b.email}</span>`:''}
+      </div>
+      ${b.notes?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">📝 ${b.notes}</div>`:''}
+      <div class="bactions">
+        <button class="btn-confirm" onclick="updateBooking('${b.id}','confirmed')">✓ Conferma</button>
+        <button class="btn-cancel"  onclick="updateBooking('${b.id}','cancelled')">✕ Annulla</button>
+      </div>
+    </div>`).join('');
+}
+function filterBookings(f){
+  bookFilter=f;
+  ['all','pending','confirmed'].forEach(k=>{
+    const b=document.getElementById('bf-'+k);
+    b.style.borderColor=k===f?'var(--green)':'';
+    b.style.color=k===f?'#5fc455':'';
+  });
+  renderBookings();
+}
+function updateBooking(id,status){
+  const list=S.get('bookings',[]);
+  const b=list.find(x=>x.id===id);
+  if(b){b.status=status;S.set('bookings',list);}
+  renderBookings(); updateNavBadges();
+  notify(status==='confirmed'?'Prenotazione confermata ✓':'Prenotazione annullata');
+}
+
+/* ─── MENU ─── */
+function renderMenu(){
+  const cats  = S.get('menu_categories',[]);
+  const items = S.get('menu_items',[]);
+  populateCatSel(cats);
+  const wrap=document.getElementById('menu-list');
+  if(!cats.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Aggiungi prima una categoria</div>';return;}
+  wrap.innerHTML=cats.map(cat=>{
+    const catItems=items.filter(i=>i.categoryId===cat.id);
+    const rows=catItems.length?catItems.map(item=>`
+      <tr>
+        <td>${item.icon||'🍽️'}</td>
+        <td style="font-weight:500">${item.name}</td>
+        <td style="color:var(--muted);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.description||'—'}</td>
+        <td style="color:var(--gold);font-weight:600;white-space:nowrap">€${parseFloat(item.price||0).toFixed(2)}</td>
+        <td><button class="atog ${item.available!==false?'on':''}" onclick="toggleAvail('${item.id}',this)"></button></td>
+        <td><div style="display:flex;gap:6px">
+          <button class="btn-sm" onclick="editItem('${item.id}')">Modifica</button>
+          <button class="btn-sm del" onclick="deleteItem('${item.id}','${item.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">Elimina</button>
+        </div></td>
+      </tr>`).join('')
+      :'<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--muted);font-style:italic">Nessun piatto — clicca "+ Nuovo piatto"</td></tr>';
+    return `<div class="cat-section">
+      <div class="cat-hdr">
+        <span>${cat.icon||''}${cat.name}</span>
+        <button class="btn-sm del" onclick="deleteCat('${cat.id}','${cat.name}')">Elimina cat.</button>
+      </div>
+      <table class="mtable">
+        <thead><tr><th></th><th>Nome</th><th>Descrizione</th><th>Prezzo</th><th>Attivo</th><th>Azioni</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
+  }).join('');
+}
+function populateCatSel(cats){
+  document.getElementById('if-cat').innerHTML='<option value="">Seleziona categoria</option>'+
+    cats.map(c=>`<option value="${c.id}">${c.icon||''}${c.name}</option>`).join('');
+}
+/* ─── IMAGE UPLOAD ─── */
+function handleImgUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const MAX_PX = 900, QUALITY = 0.75;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > MAX_PX) { h = Math.round(h * MAX_PX / w); w = MAX_PX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', QUALITY);
+      document.getElementById('if-img').value = '';
+      showImgPreview(b64);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function previewImgUrl(url) {
+  url = url.trim();
+  if (url.length > 8) showImgPreview(url); else clearImg();
+}
+function showImgPreview(src) {
+  document.getElementById('img-preview').src = src;
+  document.getElementById('img-preview-wrap').style.display = 'block';
+}
+function clearImg() {
+  document.getElementById('img-preview').src = '';
+  document.getElementById('img-preview-wrap').style.display = 'none';
+  document.getElementById('if-img').value = '';
+  document.getElementById('if-upload').value = '';
+}
+function getImgValue() {
+  const prev = document.getElementById('img-preview').src;
+  // Se c'è un'anteprima valida (base64 o URL esterno), usa quella
+  if (prev && prev !== window.location.href && !prev.startsWith('data:,')) return prev;
+  return document.getElementById('if-img').value.trim();
+}
+
+function openItemForm(){ clearItemForm(); document.getElementById('iform').classList.add('open'); document.getElementById('iform').scrollIntoView({behavior:'smooth'}); }
+function closeItemForm(){ document.getElementById('iform').classList.remove('open'); clearItemForm(); }
+function clearItemForm(){
+  ['if-name','if-price','if-icon','if-desc','if-allergens','if-img','if-id'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('if-cat').value='';
+  document.getElementById('iform-title').textContent='Nuovo piatto';
+  clearImg();
+  editingItemId=null;
+}
+function editItem(id){
+  const items=S.get('menu_items',[]);
+  const item=items.find(i=>i.id===id); if(!item)return;
+  document.getElementById('if-name').value=item.name||'';
+  document.getElementById('if-cat').value=item.categoryId||'';
+  document.getElementById('if-price').value=item.price||'';
+  document.getElementById('if-icon').value=item.icon||'';
+  document.getElementById('if-desc').value=item.description||'';
+  document.getElementById('if-allergens').value=item.allergens||'';
+  document.getElementById('if-img').value='';
+  if (item.imageUrl) showImgPreview(item.imageUrl); else clearImg();
+  document.getElementById('if-id').value=id;
+  document.getElementById('iform-title').textContent='Modifica piatto';
+  editingItemId=id;
+  document.getElementById('iform').classList.add('open');
+  document.getElementById('iform').scrollIntoView({behavior:'smooth'});
+}
+function saveItem(){
+  const name=document.getElementById('if-name').value.trim();
+  const catId=document.getElementById('if-cat').value;
+  const price=parseFloat(document.getElementById('if-price').value);
+  if(!name||!catId||isNaN(price)){notify('Compila nome, categoria e prezzo',true);return;}
+  const data={
+    name, categoryId:catId, price,
+    icon:document.getElementById('if-icon').value.trim(),
+    description:document.getElementById('if-desc').value.trim(),
+    allergens:document.getElementById('if-allergens').value.trim(),
+    imageUrl:getImgValue(),
+    available:true
+  };
+  const items=S.get('menu_items',[]);
+  if(editingItemId){
+    const i=items.findIndex(x=>x.id===editingItemId);
+    if(i>-1) items[i]={...items[i],...data};
+    notify('Piatto aggiornato ✓');
+  } else {
+    data.id='item_'+Date.now();
+    items.push(data);
+    notify('Piatto aggiunto ✓');
+  }
+  S.set('menu_items',items);
+  closeItemForm();
+  renderMenu();
+}
+function deleteItem(id,name){
+  if(!confirm('Eliminare "'+name+'"?'))return;
+  S.set('menu_items', S.get('menu_items',[]).filter(i=>i.id!==id));
+  renderMenu(); notify('Piatto eliminato');
+}
+function toggleAvail(id,btn){
+  const items=S.get('menu_items',[]);
+  const item=items.find(i=>i.id===id); if(!item)return;
+  item.available=!btn.classList.contains('on');
+  btn.classList.toggle('on',item.available);
+  S.set('menu_items',items);
+}
+function saveCat(){
+  const name=document.getElementById('nc-name').value.trim();
+  const icon=document.getElementById('nc-icon').value.trim();
+  if(!name){notify('Inserisci il nome della categoria',true);return;}
+  const cats=S.get('menu_categories',[]);
+  cats.push({id:'cat_'+Date.now(),name,icon,order:cats.length+1});
+  S.set('menu_categories',cats);
+  document.getElementById('nc-name').value='';
+  document.getElementById('nc-icon').value='';
+  toggleEl('cform');
+  renderMenu(); notify('Categoria aggiunta ✓');
+}
+function deleteCat(id,name){
+  if(!confirm('Eliminare categoria "'+name+'" e tutti i suoi piatti?'))return;
+  S.set('menu_categories', S.get('menu_categories',[]).filter(c=>c.id!==id));
+  S.set('menu_items', S.get('menu_items',[]).filter(i=>i.categoryId!==id));
+  renderMenu(); notify('Categoria eliminata');
+}
+
+/* ─── CUSTOMERS ─── */
+function renderCustomers(){
+  const list=S.get('customers',[]).slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  document.getElementById('cust-count').textContent=list.length+' client'+(list.length===1?'e':'i')+' registrat'+(list.length===1?'o':'i');
+  document.getElementById('cust-list').innerHTML=list.length?list.map(c=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--brd);gap:12px">
+      <div>
+        <div style="font-weight:500;font-size:14px">${c.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${c.contact}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-align:right">${new Date(c.createdAt).toLocaleDateString('it')}</div>
+    </div>`).join('')
+    :'<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px">Nessun cliente registrato</div>';
+}
+
+/* ─── BROADCAST ─── */
+function publishBroadcast(){
+  const msg=document.getElementById('bc-msg').value.trim();
+  if(!msg){notify('Scrivi un messaggio',true);return;}
+  const list=S.get('broadcasts',[]);
+  list.forEach(b=>b.active=false);
+  list.unshift({id:'bc_'+Date.now(),message:msg,active:true,createdAt:new Date().toISOString()});
+  S.set('broadcasts',list);
+  document.getElementById('bc-msg').value='';
+  loadBcHistory(); notify('Banner pubblicato ✓');
+}
+function removeBroadcast(){
+  const list=S.get('broadcasts',[]);
+  list.forEach(b=>b.active=false);
+  S.set('broadcasts',list);
+  loadBcHistory(); notify('Banner rimosso');
+}
+function loadBcHistory(){
+  const list=S.get('broadcasts',[]).slice(0,10);
+  const el=document.getElementById('bc-history');
+  el.innerHTML=list.length?list.map(b=>`
+    <div style="padding:10px 0;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div>
+        <div style="font-size:13px">${b.message}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(b.createdAt).toLocaleDateString('it')}</div>
+      </div>
+      <span style="font-size:11px;font-weight:600;color:${b.active?'#5fc455':'var(--muted)'};white-space:nowrap">${b.active?'ATTIVO':'archiviato'}</span>
+    </div>`).join('')
+    :'<div style="color:var(--muted);font-size:13px">Nessun messaggio inviato</div>';
+}
+
+/* ─── QR ─── */
+function buildQrLinks(){
+  const base=location.origin+location.pathname.replace('admin.html','')+'menu.html';
+  const urls=[{label:'Banco / Bar',url:base},...Array.from({length:10},(_,i)=>({label:'Tavolo '+(i+1),url:base+'?table='+(i+1)}))];
+  document.getElementById('qr-wrap').innerHTML=urls.map(u=>
+    `<button class="btn-g" style="font-size:12px" onclick="copyUrl('${u.url}')" title="${u.url}">📋 ${u.label}</button>`
+  ).join('');
+}
+function copyUrl(url){
+  navigator.clipboard.writeText(url).then(()=>notify('URL copiato!')).catch(()=>{
+    prompt('Copia questo URL:',url);
+  });
+}
+
+/* ─── UTILS ─── */
+function notify(msg,isErr=false){
+  const el=document.getElementById('notif');
+  el.textContent=(isErr?'⚠️ ':'✓ ')+msg;
+  el.classList.toggle('err',isErr);
+  el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),3500);
+}
+function toggleEl(id){
+  const el=document.getElementById(id);
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+function clearAllData(){
+  if(!confirm('Eliminare TUTTI i dati demo (ordini, prenotazioni, menu, clienti)? Non è reversibile.'))return;
+  ['orders','bookings','customers','broadcasts','menu_items','menu_categories','settings','admin_session','demo_seeded']
+    .forEach(k=>localStorage.removeItem('lp_'+k));
+  notify('Dati cancellati — ricarica la pagina');
+  setTimeout(()=>location.reload(),1500);
+}
+
+/* ─── START ─── */
+window.addEventListener('load',()=>{
+  if(S.get('admin_session','0')==='1') showApp();
+});
+</script>
+</body>
+</html>
