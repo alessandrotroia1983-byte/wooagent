@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>Admin – La Piazza</title>
+<title>Admin – Trattoria Bar la Piazza</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -161,7 +161,7 @@ nav{flex:1;padding:8px;overflow-y:auto}
 <!-- LOGIN -->
 <div id="login-wrap">
   <div class="lbox">
-    <div class="l-logo">La <em>Piazza</em></div>
+    <div class="l-logo">Trattoria Bar <em>la Piazza</em></div>
     <div class="l-sub">Pannello Ristoratore</div>
     <div class="l-hint">
       <strong>Demo — accesso di prova</strong><br>
@@ -180,7 +180,7 @@ nav{flex:1;padding:8px;overflow-y:auto}
 
   <div class="sidebar" id="sidebar">
     <div class="sb-head">
-      <div class="sb-logo">La <em>Piazza</em></div>
+      <div class="sb-logo">Trattoria Bar <em>la Piazza</em></div>
       <div class="sb-role">Gestionale</div>
     </div>
     <nav>
@@ -249,7 +249,22 @@ nav{flex:1;padding:8px;overflow-y:auto}
         </div>
         <div class="ff"><label>Descrizione</label><textarea id="if-desc" placeholder="Ingredienti e preparazione..."></textarea></div>
         <div class="ff"><label>Allergeni (opzionale)</label><input type="text" id="if-allergens" placeholder="Es: Glutine, Lattosio"></div>
-        <div class="ff"><label>URL immagine (opzionale)</label><input type="url" id="if-img" placeholder="https://..."></div>
+        <!-- IMMAGINE: upload o URL -->
+        <div class="ff">
+          <label>Immagine piatto (opzionale)</label>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <label for="if-upload" style="all:unset;background:var(--green);color:#fff;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap" onmouseover="this.style.background='#4e9e45'" onmouseout="this.style.background='#3a7a33'">📷 Carica immagine</label>
+              <input type="file" id="if-upload" accept="image/*" style="display:none" onchange="handleImgUpload(this)">
+              <span style="font-size:12px;color:var(--muted)">oppure</span>
+              <input type="url" id="if-img" placeholder="Incolla URL immagine" style="flex:1;min-width:180px;background:var(--s1);border:1px solid var(--brd);border-radius:7px;padding:8px 12px;color:var(--txt);font-family:var(--B);font-size:13px;outline:none" oninput="previewImgUrl(this.value)">
+            </div>
+            <div id="img-preview-wrap" style="display:none;position:relative;width:fit-content">
+              <img id="img-preview" src="" alt="Anteprima" style="max-height:140px;max-width:100%;border-radius:8px;border:1px solid var(--brd);object-fit:cover;display:block">
+              <button onclick="clearImg()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+            </div>
+          </div>
+        </div>
         <input type="hidden" id="if-id">
         <div style="display:flex;gap:8px">
           <button class="btn-a" onclick="saveItem()">Salva piatto</button>
@@ -602,12 +617,56 @@ function populateCatSel(cats){
   document.getElementById('if-cat').innerHTML='<option value="">Seleziona categoria</option>'+
     cats.map(c=>`<option value="${c.id}">${c.icon||''}${c.name}</option>`).join('');
 }
+/* ─── IMAGE UPLOAD ─── */
+function handleImgUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const MAX_PX = 900, QUALITY = 0.75;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > MAX_PX) { h = Math.round(h * MAX_PX / w); w = MAX_PX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', QUALITY);
+      document.getElementById('if-img').value = '';
+      showImgPreview(b64);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function previewImgUrl(url) {
+  url = url.trim();
+  if (url.length > 8) showImgPreview(url); else clearImg();
+}
+function showImgPreview(src) {
+  document.getElementById('img-preview').src = src;
+  document.getElementById('img-preview-wrap').style.display = 'block';
+}
+function clearImg() {
+  document.getElementById('img-preview').src = '';
+  document.getElementById('img-preview-wrap').style.display = 'none';
+  document.getElementById('if-img').value = '';
+  document.getElementById('if-upload').value = '';
+}
+function getImgValue() {
+  const prev = document.getElementById('img-preview').src;
+  // Se c'è un'anteprima valida (base64 o URL esterno), usa quella
+  if (prev && prev !== window.location.href && !prev.startsWith('data:,')) return prev;
+  return document.getElementById('if-img').value.trim();
+}
+
 function openItemForm(){ clearItemForm(); document.getElementById('iform').classList.add('open'); document.getElementById('iform').scrollIntoView({behavior:'smooth'}); }
 function closeItemForm(){ document.getElementById('iform').classList.remove('open'); clearItemForm(); }
 function clearItemForm(){
   ['if-name','if-price','if-icon','if-desc','if-allergens','if-img','if-id'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('if-cat').value='';
   document.getElementById('iform-title').textContent='Nuovo piatto';
+  clearImg();
   editingItemId=null;
 }
 function editItem(id){
@@ -619,7 +678,8 @@ function editItem(id){
   document.getElementById('if-icon').value=item.icon||'';
   document.getElementById('if-desc').value=item.description||'';
   document.getElementById('if-allergens').value=item.allergens||'';
-  document.getElementById('if-img').value=item.imageUrl||'';
+  document.getElementById('if-img').value='';
+  if (item.imageUrl) showImgPreview(item.imageUrl); else clearImg();
   document.getElementById('if-id').value=id;
   document.getElementById('iform-title').textContent='Modifica piatto';
   editingItemId=id;
@@ -636,7 +696,7 @@ function saveItem(){
     icon:document.getElementById('if-icon').value.trim(),
     description:document.getElementById('if-desc').value.trim(),
     allergens:document.getElementById('if-allergens').value.trim(),
-    imageUrl:document.getElementById('if-img').value.trim(),
+    imageUrl:getImgValue(),
     available:true
   };
   const items=S.get('menu_items',[]);
