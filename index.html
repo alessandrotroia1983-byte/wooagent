@@ -620,8 +620,26 @@ nav{flex:1;padding:10px 10px;overflow-y:auto}
 
     <!-- FLIGHTS -->
     <div class="panel" id="panel-flights">
+
+      <!-- ESPLORA MAPPA PREZZI -->
+      <div class="card" style="border-color:rgba(0,229,160,.3);background:linear-gradient(135deg,rgba(0,229,160,.05),rgba(124,58,255,.05))">
+        <div class="card-head">🗺️ Esplora Mappa Prezzi <span class="ai-badge">Consigliato</span></div>
+        <div class="card-body">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">Vedi <strong style="color:var(--txt)">tutti i voli da Roma</strong> su una mappa interattiva con i prezzi più bassi per ogni destinazione europea. Il modo più veloce per trovare dove si spende meno.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <button onclick="setExploreDate('2026-07-13','2026-07-20')" style="background:var(--s2);border:1px solid var(--brd);color:var(--txt);border-radius:8px;padding:6px 12px;font-family:var(--M);font-size:12px;cursor:pointer;transition:all .2s">📅 13–20 lug</button>
+            <button onclick="setExploreDate('2026-07-14','2026-07-21')" style="background:var(--s2);border:1px solid var(--brd);color:var(--txt);border-radius:8px;padding:6px 12px;font-family:var(--M);font-size:12px;cursor:pointer;transition:all .2s">📅 14–21 lug</button>
+            <button onclick="setExploreDate('2026-07-15','2026-07-22')" style="background:rgba(0,229,160,.12);border:1px solid var(--acc);color:var(--acc);border-radius:8px;padding:6px 12px;font-family:var(--M);font-size:12px;cursor:pointer;transition:all .2s">📅 15–22 lug ✓</button>
+            <button onclick="setExploreDate('2026-07-17','2026-07-24')" style="background:var(--s2);border:1px solid var(--brd);color:var(--txt);border-radius:8px;padding:6px 12px;font-family:var(--M);font-size:12px;cursor:pointer;transition:all .2s">📅 17–24 lug</button>
+          </div>
+          <button onclick="openFlightExplore()" style="width:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:11px;padding:14px;font-family:var(--H);font-size:15px;font-weight:800;cursor:pointer;letter-spacing:-.3px;transition:all .2s">🗺️ Apri Mappa Prezzi Europa →</button>
+          <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center">Si apre Google Flights con FCO pre-selezionato · seleziona "Europa" sulla mappa</div>
+        </div>
+      </div>
+
+      <!-- CERCA ROTTA SPECIFICA -->
       <div class="card">
-        <div class="card-head">✈️ Cerca Voli <span class="ai-badge">Google Flights</span></div>
+        <div class="card-head">✈️ Cerca Rotta Specifica <span class="ai-badge">Google Flights</span></div>
         <div class="card-body">
           <div class="form-row" style="grid-template-columns:1fr 1fr">
             <div class="ff">
@@ -1441,6 +1459,22 @@ function addThinking() {
 }
 
 // FLIGHTS
+function openFlightExplore() {
+  var from = (document.getElementById('fl-from').value.trim().toUpperCase() || 'FCO');
+  var dep  = document.getElementById('fl-dep').value  || '2026-07-15';
+  var ret  = document.getElementById('fl-ret').value  || '';
+  var pax  = document.getElementById('fl-pax').value  || '1';
+  var url  = 'https://www.google.com/flights?hl=it#search;f=' + from + ';t=;d=' + dep + (ret ? ';r=' + ret : '') + ';s=' + pax + ';sc=1';
+  window.open(url, '_blank');
+}
+function setExploreDate(dep, ret) {
+  document.getElementById('fl-dep').value = dep;
+  document.getElementById('fl-ret').value = ret;
+  document.querySelectorAll('[onclick^="setExploreDate"]').forEach(function(b) {
+    b.style.background = 'var(--s2)'; b.style.borderColor = 'var(--brd)'; b.style.color = 'var(--txt)';
+  });
+  event.target.style.background = 'rgba(0,229,160,.12)'; event.target.style.borderColor = 'var(--acc)'; event.target.style.color = 'var(--acc)';
+}
 function flightSearch() {
   var from = document.getElementById('fl-from').value.trim().toUpperCase();
   var to = document.getElementById('fl-to').value.trim().toUpperCase();
