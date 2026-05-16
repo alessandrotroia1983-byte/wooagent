@@ -236,7 +236,7 @@ nav{flex:1;padding:10px 10px;overflow-y:auto}
       <input type="password" id="cfg-claude" placeholder="sk-ant-xxxxxxxxx">
     </div>
     <div class="sf">
-      <label>SerpAPI Key (Google Flights)</label>
+      <label>Chiave SerpAPI (Google Flights)</label>
       <input type="password" id="cfg-serpapi" placeholder="Opzionale — ricerca voli live">
     </div>
 
@@ -660,7 +660,7 @@ nav{flex:1;padding:10px 10px;overflow-y:auto}
                 <option value="1">Economy</option>
                 <option value="2">Premium Economy</option>
                 <option value="3">Business</option>
-                <option value="4">First</option>
+                <option value="4">Prima Classe</option>
               </select>
             </div>
           </div>
@@ -1493,7 +1493,7 @@ function flightOpenGoogle() {
   var dep = document.getElementById('fl-dep').value || '';
   var ret = document.getElementById('fl-ret').value || '';
   var pax = document.getElementById('fl-pax').value || '1';
-  var q = 'Flights from ' + (from||'origin') + ' to ' + (to||'destination') + (dep ? ' on ' + dep : '') + (ret ? ' return ' + ret : '');
+  var q = 'Voli da ' + (from||'origine') + ' a ' + (to||'destinazione') + (dep ? ' il ' + dep : '') + (ret ? ' ritorno ' + ret : '');
   window.open('https://www.google.com/travel/flights?q=' + encodeURIComponent(q) + '&hl=it', '_blank');
 }
 
