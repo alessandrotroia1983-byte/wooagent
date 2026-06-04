@@ -235,13 +235,18 @@ nav{flex:1;padding:10px 10px;overflow-y:auto}
       <label>Anthropic API Key (Claude AI)</label>
       <input type="password" id="cfg-claude" placeholder="sk-ant-xxxxxxxxx">
     </div>
+    <div class="sf">
+      <label>Chiave SerpAPI (Google Flights)</label>
+      <input type="password" id="cfg-serpapi" placeholder="Opzionale — ricerca voli live">
+    </div>
 
     <button class="btn-cta" onclick="doSetup()">Salva e Inizia</button>
 
     <div class="setup-note">
       <strong>Configurazione unica</strong> — inserisci le credenziali una sola volta, vengono salvate sul tuo dispositivo.<br>
       Nessun server esterno. L'app funziona direttamente dal browser.<br><br>
-      <strong>Senza AI?</strong> Lascia vuota la chiave Anthropic — puoi inserire barcode e info manualmente.
+      <strong>Senza AI?</strong> Lascia vuota la chiave Anthropic — puoi inserire barcode e info manualmente.<br>
+      <strong>Voli?</strong> Inserisci la chiave SerpAPI per la ricerca voli live.
     </div>
   </div>
 </div>
@@ -268,6 +273,8 @@ nav{flex:1;padding:10px 10px;overflow-y:auto}
       <div class="ng">Negozio</div>
       <div class="ni" onclick="go('orders')"><span class="ico">🛒</span> Ordini</div>
       <div class="ni" onclick="go('chat')"><span class="ico">🤖</span> Agente AI</div>
+      <div class="ng">Strumenti</div>
+      <div class="ni" onclick="go('flights')"><span class="ico">✈️</span> Cerca Voli</div>
     </nav>
     <div class="sb-foot">
       <button class="btn-out" onclick="doLogout()">Cambia configurazione</button>
@@ -611,6 +618,79 @@ nav{flex:1;padding:10px 10px;overflow-y:auto}
       </div>
     </div>
 
+    <!-- FLIGHTS -->
+    <div class="panel" id="panel-flights">
+
+      <!-- ESPLORA MAPPA PREZZI -->
+      <div class="card" style="border-color:rgba(0,229,160,.3);background:linear-gradient(135deg,rgba(0,229,160,.05),rgba(124,58,255,.05))">
+        <div class="card-head">🗺️ Esplora Mappa Prezzi <span class="ai-badge">Consigliato</span></div>
+        <div class="card-body">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">Vedi <strong style="color:var(--txt)">tutti i voli da Roma</strong> su una mappa interattiva con i prezzi più bassi per ogni destinazione europea. Il modo più veloce per trovare dove si spende meno.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <button onclick="setExploreDate('2026-07-13','2026-07-20')" style="background:var(--s2);border:1px solid var(--brd);color:var(--txt);border-radius:8px;padding:6px 12px;font-family:var(--M);font-size:12px;cursor:pointer;transition:all .2s">📅 13–20 lug</button>
+            <button onclick="setExploreDate('2026-07-14','2026-07-21')" style="background:var(--s2);border:1px solid var(--brd);color:var(--txt);border-radius:8px;padding:6px 12px;font-family:var(--M);font-size:12px;cursor:pointer;transition:all .2s">📅 14–21 lug</button>
+            <button onclick="setExploreDate('2026-07-15','2026-07-22')" style="background:rgba(0,229,160,.12);border:1px solid var(--acc);color:var(--acc);border-radius:8px;padding:6px 12px;font-family:var(--M);font-size:12px;cursor:pointer;transition:all .2s">📅 15–22 lug ✓</button>
+            <button onclick="setExploreDate('2026-07-17','2026-07-24')" style="background:var(--s2);border:1px solid var(--brd);color:var(--txt);border-radius:8px;padding:6px 12px;font-family:var(--M);font-size:12px;cursor:pointer;transition:all .2s">📅 17–24 lug</button>
+          </div>
+          <button onclick="openFlightExplore()" style="width:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:11px;padding:14px;font-family:var(--H);font-size:15px;font-weight:800;cursor:pointer;letter-spacing:-.3px;transition:all .2s">🗺️ Apri Mappa Prezzi Europa →</button>
+          <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center">Si apre Google Flights con FCO pre-selezionato · seleziona "Europa" sulla mappa</div>
+        </div>
+      </div>
+
+      <!-- CERCA ROTTA SPECIFICA -->
+      <div class="card">
+        <div class="card-head">✈️ Cerca Rotta Specifica <span class="ai-badge">Google Flights</span></div>
+        <div class="card-body">
+          <div class="form-row" style="grid-template-columns:1fr 1fr">
+            <div class="ff">
+              <label>Da (codice IATA)</label>
+              <input type="text" id="fl-from" placeholder="es: FCO, MXP" maxlength="3" style="background:var(--s2);border:1px solid var(--brd);border-radius:9px;padding:11px 14px;color:var(--txt);font-family:var(--M);font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;outline:none;width:100%;transition:border-color .2s" oninput="this.value=this.value.toUpperCase()">
+            </div>
+            <div class="ff">
+              <label>A (codice IATA)</label>
+              <input type="text" id="fl-to" placeholder="es: JFK, LHR" maxlength="3" style="background:var(--s2);border:1px solid var(--brd);border-radius:9px;padding:11px 14px;color:var(--txt);font-family:var(--M);font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;outline:none;width:100%;transition:border-color .2s" oninput="this.value=this.value.toUpperCase()">
+            </div>
+          </div>
+          <div class="form-row" style="grid-template-columns:1fr 1fr;margin-top:12px">
+            <div class="ff">
+              <label>Data partenza</label>
+              <input type="date" id="fl-dep" style="background:var(--s2);border:1px solid var(--brd);border-radius:9px;padding:11px 14px;color:var(--txt);font-family:var(--M);font-size:13px;outline:none;width:100%;transition:border-color .2s;color-scheme:dark">
+            </div>
+            <div class="ff">
+              <label>Data ritorno (opz.)</label>
+              <input type="date" id="fl-ret" style="background:var(--s2);border:1px solid var(--brd);border-radius:9px;padding:11px 14px;color:var(--txt);font-family:var(--M);font-size:13px;outline:none;width:100%;transition:border-color .2s;color-scheme:dark">
+            </div>
+          </div>
+          <div class="form-row" style="grid-template-columns:1fr 1fr;margin-top:12px">
+            <div class="ff">
+              <label>Passeggeri adulti</label>
+              <select id="fl-pax" style="background:var(--s2);border:1px solid var(--brd);border-radius:9px;padding:11px 14px;color:var(--txt);font-family:var(--M);font-size:13px;outline:none;width:100%">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+            <div class="ff">
+              <label>Classe</label>
+              <select id="fl-class" style="background:var(--s2);border:1px solid var(--brd);border-radius:9px;padding:11px 14px;color:var(--txt);font-family:var(--M);font-size:13px;outline:none;width:100%">
+                <option value="1">Economy</option>
+                <option value="2">Premium Economy</option>
+                <option value="3">Business</option>
+                <option value="4">Prima Classe</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn-acc" onclick="flightSearch()" style="flex:1">Cerca Voli</button>
+            <button onclick="flightOpenGoogle()" style="background:var(--s2);border:1px solid var(--brd);color:var(--txt);border-radius:9px;padding:10px 16px;font-family:var(--H);font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;white-space:nowrap">Apri Google ↗</button>
+          </div>
+        </div>
+      </div>
+      <div id="fl-results"></div>
+    </div>
+
   </main>
 
   <div class="mobile-nav">
@@ -620,6 +700,7 @@ nav{flex:1;padding:10px 10px;overflow-y:auto}
       <div class="mob-item" onclick="go('inventory')"><span class="ico">📦</span>Magazzino</div>
       <div class="mob-item" onclick="go('orders')"><span class="ico">🛒</span>Ordini</div>
       <div class="mob-item" onclick="go('chat')"><span class="ico">🤖</span>AI</div>
+      <div class="mob-item" onclick="go('flights')"><span class="ico">✈️</span>Voli</div>
     </div>
   </div>
 </div>
@@ -639,8 +720,9 @@ function doSetup() {
   var key = document.getElementById('cfg-key').value.trim();
   var secret = document.getElementById('cfg-secret').value.trim();
   var claude = document.getElementById('cfg-claude').value.trim();
+  var serpapi = document.getElementById('cfg-serpapi').value.trim();
   if (!url || !key || !secret) { notify('error', 'URL, Consumer Key e Secret sono obbligatori'); return; }
-  CFG = { url: url, key: key, secret: secret, claude: claude };
+  CFG = { url: url, key: key, secret: secret, claude: claude, serpapi: serpapi };
   localStorage.setItem('wooagent_cfg', JSON.stringify(CFG));
   document.getElementById('sb-url').textContent = url.replace('https://','').replace('http://','');
   document.getElementById('setup-screen').style.display = 'none';
@@ -663,6 +745,7 @@ function loadConfig() {
         document.getElementById('cfg-key').value = CFG.key;
         document.getElementById('cfg-secret').value = CFG.secret;
         if (CFG.claude) document.getElementById('cfg-claude').value = CFG.claude;
+        if (CFG.serpapi) document.getElementById('cfg-serpapi').value = CFG.serpapi;
         document.getElementById('sb-url').textContent = CFG.url.replace('https://','').replace('http://','');
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
@@ -748,7 +831,7 @@ function showOv(txt, sub) {
 function hideOv() { document.getElementById('overlay').classList.remove('show'); }
 
 // NAV
-var panels = ['scan-add','scan-sell','delete-product','inventory','low-stock','orders','chat'];
+var panels = ['scan-add','scan-sell','delete-product','inventory','low-stock','orders','chat','flights'];
 var titles = {
   'scan-add': 'Scansiona <span>e Aggiungi</span>',
   'scan-sell': 'Vendi da <span>Etichetta</span>',
@@ -756,7 +839,8 @@ var titles = {
   'inventory': 'Inven<span>tario</span>',
   'low-stock': 'Stock <span>Critico</span>',
   'orders': 'Or<span>dini</span>',
-  'chat': 'Agente <span>AI</span>'
+  'chat': 'Agente <span>AI</span>',
+  'flights': 'Cerca <span>Voli</span>'
 };
 function go(name) {
   panels.forEach(function(p) {
@@ -1372,6 +1456,79 @@ function addThinking() {
   var msgs = document.getElementById('chat-msgs');
   msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
   return id;
+}
+
+// FLIGHTS
+function openFlightExplore() {
+  var from = (document.getElementById('fl-from').value.trim().toUpperCase() || 'FCO');
+  var dep  = document.getElementById('fl-dep').value  || '2026-07-15';
+  var ret  = document.getElementById('fl-ret').value  || '';
+  var pax  = document.getElementById('fl-pax').value  || '1';
+  var url  = 'https://www.google.com/flights?hl=it#search;f=' + from + ';t=;d=' + dep + (ret ? ';r=' + ret : '') + ';s=' + pax + ';sc=1';
+  window.open(url, '_blank');
+}
+function setExploreDate(dep, ret) {
+  document.getElementById('fl-dep').value = dep;
+  document.getElementById('fl-ret').value = ret;
+  document.querySelectorAll('[onclick^="setExploreDate"]').forEach(function(b) {
+    b.style.background = 'var(--s2)'; b.style.borderColor = 'var(--brd)'; b.style.color = 'var(--txt)';
+  });
+  event.target.style.background = 'rgba(0,229,160,.12)'; event.target.style.borderColor = 'var(--acc)'; event.target.style.color = 'var(--acc)';
+}
+function flightSearch() {
+  var from = document.getElementById('fl-from').value.trim().toUpperCase();
+  var to = document.getElementById('fl-to').value.trim().toUpperCase();
+  var dep = document.getElementById('fl-dep').value;
+  var ret = document.getElementById('fl-ret').value;
+  var pax = document.getElementById('fl-pax').value;
+  var cls = document.getElementById('fl-class').value;
+  if (!from || from.length !== 3) { notify('error', 'Inserisci codice IATA partenza (3 lettere)'); return; }
+  if (!to || to.length !== 3) { notify('error', 'Inserisci codice IATA destinazione (3 lettere)'); return; }
+  if (!dep) { notify('error', 'Seleziona data di partenza'); return; }
+  if (!CFG.serpapi) {
+    notify('warning', 'SerpAPI key non configurata — apertura Google Flights');
+    flightOpenGoogle(); return;
+  }
+  var res = document.getElementById('fl-results');
+  res.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)"><div class="spin-big" style="margin:0 auto 12px"></div>Ricerca in corso...</div>';
+  var params = 'engine=google_flights&departure_id=' + from + '&arrival_id=' + to + '&outbound_date=' + dep + '&adults=' + pax + '&travel_class=' + cls + '&currency=EUR&hl=it&api_key=' + CFG.serpapi;
+  if (ret) params += '&return_date=' + ret + '&type=1';
+  fetch('https://serpapi.com/search.json?' + params)
+    .then(function(r) { return r.json(); })
+    .then(function(data) { renderFlights(data, from, to, dep, ret); })
+    .catch(function(e) { res.innerHTML = '<div class="card"><div class="card-body" style="color:var(--err);text-align:center;padding:24px">Errore: ' + e.message + '<br><br><button class="btn-acc" onclick="flightOpenGoogle()">Apri su Google Flights ↗</button></div></div>'; });
+}
+
+function renderFlights(data, from, to, dep, ret) {
+  var res = document.getElementById('fl-results');
+  var best = (data.best_flights || []).concat(data.other_flights || []);
+  if (!best.length) {
+    res.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:24px;color:var(--muted)">Nessun volo trovato.<br><br><button class="btn-acc" onclick="flightOpenGoogle()">Cerca su Google Flights ↗</button></div></div>';
+    return;
+  }
+  var clsLabel = ['','Economy','Premium Economy','Business','First'];
+  res.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px">' + best.slice(0, 8).map(function(f) {
+    var legs = f.flights || [];
+    var price = f.price ? '<strong style="color:var(--acc);font-size:20px">€' + f.price + '</strong>' : '';
+    var dur = f.total_duration ? '<span style="color:var(--muted);font-size:12px">⏱ ' + Math.floor(f.total_duration/60) + 'h ' + (f.total_duration%60) + 'm</span>' : '';
+    var stops = legs.length <= 1 ? '<span style="background:rgba(0,229,160,.12);color:var(--acc);border:1px solid rgba(0,229,160,.3);padding:2px 8px;border-radius:20px;font-size:11px">Diretto</span>' : '<span style="background:rgba(255,214,10,.1);color:var(--warn);border:1px solid rgba(255,214,10,.3);padding:2px 8px;border-radius:20px;font-size:11px">' + (legs.length-1) + ' scalo' + (legs.length>2?'i':'') + '</span>';
+    var airline = legs[0] ? (legs[0].airline || '') : '';
+    var dep_t = legs[0] ? (legs[0].departure_airport ? legs[0].departure_airport.time : '') : '';
+    var arr_t = legs[legs.length-1] ? (legs[legs.length-1].arrival_airport ? legs[legs.length-1].arrival_airport.time : '') : '';
+    var dep_s = dep_t ? dep_t.slice(11,16) : '';
+    var arr_s = arr_t ? arr_t.slice(11,16) : '';
+    return '<div class="card"><div class="card-body"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><div style="font-family:var(--H);font-size:16px;font-weight:800">' + from + ' → ' + to + '</div><div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">' + stops + (airline ? '<span style="font-size:12px;color:var(--muted)">' + airline + '</span>' : '') + '</div>' + (dep_s ? '<div style="margin-top:8px;font-size:13px"><span style="font-weight:700">' + dep_s + '</span><span style="color:var(--muted)"> → </span><span style="font-weight:700">' + arr_s + '</span></div>' : '') + '</div><div style="text-align:right">' + price + '<div style="margin-top:4px">' + dur + '</div></div></div>' + (f.carbon_emissions ? '<div style="margin-top:10px;font-size:11px;color:var(--muted)">CO₂ est.: ' + Math.round((f.carbon_emissions.this_flight||0)/1000) + ' kg</div>' : '') + '</div></div>';
+  }).join('') + '</div>';
+}
+
+function flightOpenGoogle() {
+  var from = document.getElementById('fl-from').value.trim().toUpperCase() || '';
+  var to = document.getElementById('fl-to').value.trim().toUpperCase() || '';
+  var dep = document.getElementById('fl-dep').value || '';
+  var ret = document.getElementById('fl-ret').value || '';
+  var pax = document.getElementById('fl-pax').value || '1';
+  var q = 'Voli da ' + (from||'origine') + ' a ' + (to||'destinazione') + (dep ? ' il ' + dep : '') + (ret ? ' ritorno ' + ret : '');
+  window.open('https://www.google.com/travel/flights?q=' + encodeURIComponent(q) + '&hl=it', '_blank');
 }
 
 // INIT
